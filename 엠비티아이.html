@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>MBTI 라이트 테스트 | Pastel</title>
+  <meta name="description" content="간단한 12문항으로 MBTI 선호 경향을 파스텔 톤으로 예쁘게 진단하고 결과를 공유하세요." />
+  <meta name="color-scheme" content="light only">
+  <style>
+    /* ---- Reset & base ---- */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans KR", "Apple SD Gothic Neo", "맑은 고딕", sans-serif;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      color: #3b3b3b;
+      background: radial-gradient(1200px 600px at 15% 10%, #fdf2f8 0%, #fdf2f8 30%, transparent 70%),
+                  radial-gradient(1000px 600px at 90% 20%, #ecfeff 0%, #ecfeff 35%, transparent 70%),
+                  radial-gradient(1000px 800px at 50% 100%, #eef2ff 0%, #eef2ff 45%, #f7f7fb 90%);
+    }
+
+    :root{
+      --card-bg: rgba(255,255,255,0.75);
+      --card-border: rgba(0,0,0,0.06);
+      --shadow: 0 10px 30px rgba(55, 65, 81, .12);
+      --brand: #8b5cf6; /* pastel violet */
+      --accent: #22c55e; /* mint */
+      --peach: #fdba74;
+      --rose: #fb7185;
+      --sky: #38bdf8;
+      --lav: #c4b5fd;
+      --muted: #6b7280;
+      --ring: rgba(139,92,246,.35);
+    }
+
+    .skip-link{
+      position: absolute; left: -9999px; top: auto;
+    }
+    .skip-link:focus{
+      left: 16px; top: 16px; z-index: 1000; background: #111; color: #fff;
+      padding: .5rem .75rem; border-radius: .5rem;
+    }
+
+    header.hero{
+      padding: clamp(28px, 4vw, 48px) 16px 12px;
+      text-align: center;
+    }
+    .badge{
+      display: inline-flex; align-items: center; gap:.5rem;
+      padding: .35rem .6rem; border-radius: 999px;
+      background: #fff; border: 1px solid var(--card-border);
+      box-shadow: var(--shadow);
+      font-size: .85rem; color: #6b7280;
+    }
+    .badge .dot{ width:8px; height:8px; border-radius:999px; background: var(--brand); box-shadow: 0 0 0 4px var(--ring); }
+
+    h1{
+      font-size: clamp(28px, 4.8vw, 48px);
+      margin: 14px 0 8px; letter-spacing: -0.02em;
+      color: #1f2937;
+    }
+    .subtitle{ color: var(--muted); font-size: clamp(14px, 2.2vw, 16px); }
+
+    main{ display:flex; justify-content:center; }
+
+    .card{
+      width: min(920px, 92vw);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      box-shadow: var(--shadow);
+      border-radius: 24px;
+      backdrop-filter: saturate(140%) blur(6px);
+      padding: clamp(16px, 3vw, 28px);
+      margin: 20px auto 60px;
+    }
+
+    .actions{ display:flex; gap:10px; flex-wrap:wrap; }
+    .btn{
+      --bg: #fff; --fg:#111; --bd: var(--card-border);
+      appearance: none; border:1px solid var(--bd); background: var(--bg); color:var(--fg);
+      padding: .8rem 1.1rem; border-radius: 14px; font-weight:600; cursor:pointer;
+      transition: transform .06s ease, box-shadow .2s ease, background .2s ease, border-color .2s ease;
+      box-shadow: 0 6px 16px rgba(17,24,39,.08);
+    }
+    .btn:hover{ transform: translateY(-2px); }
+    .btn:focus{ outline: none; box-shadow: 0 0 0 6px var(--ring); }
+    .btn.primary{ --bg: linear-gradient(180deg, #ede9fe, #fff); --bd: #d9d6fe; }
+    .btn.mint{ --bg: linear-gradient(180deg, #dcfce7, #fff); --bd: #bbf7d0; }
+    .btn.rose{ --bg: linear-gradient(180deg, #ffe4e6, #fff); --bd: #fecdd3; }
+    .btn.neutral{ --bg:#fff; }
+    .btn[disabled]{ opacity:.5; pointer-events:none; }
+
+    /* ---- Intro ---- */
+    #intro .list{ display:grid; grid-template-columns: repeat(auto-fit, minmax(220px,1fr)); gap:12px; margin: 18px 0 8px; }
+    .pill{
+      padding: .65rem .8rem; border-radius:14px; background: #fff; border:1px solid var(--card-border);
+    }
+
+    /* ---- Quiz ---- */
+    #quiz[hidden], #result[hidden], #about[hidden]{ display:none; }
+    .progress-wrap{ display:flex; align-items:center; gap:10px; margin: 6px 0 18px; }
+    progress{ width:100%; height:12px; border:0; background: #eef2ff; border-radius: 999px; }
+    progress::-webkit-progress-bar{ background:#eef2ff; border-radius:999px; }
+    progress::-webkit-progress-value{ background: linear-gradient(90deg, #c7d2fe, #ddd6fe); border-radius:999px; }
+    .step{ font-size:.9rem; color: var(--muted); }
+
+    form{ margin-top:6px; }
+    fieldset{ border:0; padding:0; margin: 0 0 14px; }
+    legend{ font-weight:700; color:#111827; margin-bottom: 6px; }
+    .qtext{ color:#4b5563; margin-bottom: 10px; }
+
+    .choice-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:12px; }
+    .choice{
+      position: relative; border:1px solid var(--card-border); background: #fff; border-radius:16px; padding: 14px 14px; cursor:pointer; user-select:none;
+      display:flex; gap:10px; align-items:center; min-height:60px;
+      transition: border-color .15s ease, box-shadow .15s ease, transform .06s ease;
+    }
+    .choice:hover{ transform: translateY(-2px); }
+    .choice.selected{ border-color:#c7d2fe; box-shadow:0 0 0 4px #e0e7ff; }
+    .choice input{ position:absolute; inset:0; opacity:0; }
+    .bubble{ flex:0 0 28px; height:28px; border-radius:999px; border:2px solid #cbd5e1; }
+    .choice.selected .bubble{ border-color: transparent; background: linear-gradient(180deg, #ddd6fe, #c7d2fe); }
+    .hint{ font-size:.9rem; color:#6b7280; }
+
+    .nav{ display:flex; justify-content:space-between; align-items:center; margin-top:10px; }
+
+    .toast{ margin-top:10px; color:#b91c1c; font-weight:600; display:none; }
+    .toast.show{ display:block; }
+
+    /* ---- Result ---- */
+    .type-badge{ display:inline-flex; align-items:center; gap:10px; padding:.7rem 1rem; border-radius:16px; background:#fff; border:1px solid var(--card-border); box-shadow: var(--shadow); font-weight:800; font-size: 1.35rem; }
+    .type-badge .chip{ width:12px; height:12px; border-radius:999px; background: linear-gradient(180deg, #fbcfe8, #e9d5ff); box-shadow: 0 0 0 5px var(--ring); }
+
+    .grid{ display:grid; gap:14px; grid-template-columns: 1fr; }
+    @media (min-width: 760px){ .grid.two{ grid-template-columns: 1.1fr .9fr; } }
+
+    .meter{ background:#f1f5f9; border-radius:12px; height: 12px; overflow:hidden; border:1px solid #e5e7eb; }
+    .bar{ height:100%; width:50%; background: linear-gradient(90deg,#ddd6fe,#c7d2fe); }
+    .meter-row{ display:grid; grid-template-columns: 84px 1fr 84px; gap:8px; align-items:center; }
+    .meter-row .label{ color:#6b7280; font-weight:700; font-size:.92rem; }
+
+    .note{ font-size:.92rem; color:#64748b; }
+    details{ background:#fff; border:1px solid var(--card-border); border-radius:14px; padding: .9rem 1rem; }
+    summary{ cursor:pointer; font-weight:700; color:#111827; }
+
+    .footer{ text-align:center; color:#9ca3af; font-size:.85rem; margin: 30px 0 60px; }
+    .brandmark{ font-weight:800; letter-spacing:.02em; color:#7c3aed; }
+  </style>
+</head>
+<body>
+  <a href="#main" class="skip-link">본문 바로가기</a>
+
+  <header class="hero" role="banner">
+    <span class="badge" aria-hidden="true"><span class="dot"></span> Pastel MBTI</span>
+    <h1>MBTI 라이트 테스트</h1>
+    <p class="subtitle">12문항으로 선호 경향을 가볍게 체크하고, 타입 설명과 팁을 받아보세요. (채용/중요 의사결정 용도 아님)</p>
+  </header>
+
+  <main id="main" role="main">
+    <!-- Intro -->
+    <section id="intro" class="card" aria-labelledby="intro-title">
+      <h2 id="intro-title" style="margin-top:0">시작하기 전에</h2>
+      <div class="list" role="list">
+        <div class="pill" role="listitem">정답은 없습니다. 더 “편한 쪽”을 고르세요.</div>
+        <div class="pill" role="listitem">4축(E–I, S–N, T–F, J–P) 각각 3문항씩, 총 12문항.</div>
+        <div class="pill" role="listitem">결과는 자기이해/커뮤니케이션용입니다.</div>
+        <div class="pill" role="listitem">언제든 <strong>다시하기</strong>가 가능합니다.</div>
+      </div>
+      <div class="actions" style="margin-top:14px">
+        <button class="btn primary" id="startBtn" aria-describedby="start-hint">테스트 시작</button>
+        <button class="btn neutral" id="aboutBtn">MBTI 간단 설명 보기</button>
+      </div>
+      <p id="start-hint" class="hint">소요 시간: 3–5분</p>
+    </section>
+
+    <!-- About (compact primer) -->
+    <section id="about" class="card" aria-labelledby="about-title" hidden>
+      <h2 id="about-title" style="margin-top:0">MBTI 아주 간단히</h2>
+      <p class="note">MBTI는 성격의 우열이 아니라 <strong>선호 경향</strong>을 네 축으로 나눈 모델입니다.</p>
+      <ul>
+        <li><strong>E–I</strong> 에너지 방향: 사람/활동에서 충전 vs. 혼자 숙고로 충전</li>
+        <li><strong>S–N</strong> 정보 인식: 사실·현재 vs. 패턴·가능성</li>
+        <li><strong>T–F</strong> 판단 기준: 논리·원칙 vs. 공감·가치</li>
+        <li><strong>J–P</strong> 생활 양식: 계획·마감 vs. 유연·탐색</li>
+      </ul>
+      <div class="actions">
+        <button class="btn primary" id="startFromAbout">바로 테스트하기</button>
+        <button class="btn neutral" id="backToIntro">돌아가기</button>
+      </div>
+    </section>
+
+    <!-- Quiz -->
+    <section id="quiz" class="card" aria-label="MBTI 질문지" hidden>
+      <div class="progress-wrap" aria-live="polite">
+        <span class="step" id="stepText">1 / 12</span>
+        <progress id="progress" max="12" value="1" aria-label="진행률"></progress>
+      </div>
+
+      <form id="quizForm" novalidate>
+        <fieldset>
+          <legend id="qTitle">Q1. 어느 쪽이 더 편한가요?</legend>
+          <p class="qtext" id="qDesc">말 그대로 더 자연스러운 쪽을 고르세요.</p>
+          <div class="choice-grid" role="radiogroup" aria-labelledby="qTitle">
+            <label class="choice" id="optLeft">
+              <input type="radio" name="answer" value="LEFT" aria-describedby="leftText">
+              <span class="bubble" aria-hidden="true"></span>
+              <span id="leftText">왼쪽 옵션</span>
+            </label>
+            <label class="choice" id="optRight">
+              <input type="radio" name="answer" value="RIGHT" aria-describedby="rightText">
+              <span class="bubble" aria-hidden="true"></span>
+              <span id="rightText">오른쪽 옵션</span>
+            </label>
+          </div>
+        </fieldset>
+        <div class="nav">
+          <div class="actions">
+            <button class="btn neutral" type="button" id="prevBtn" aria-label="이전 문항">← 이전</button>
+            <button class="btn mint" type="button" id="clearBtn" aria-label="선택 해제">선택 해제</button>
+          </div>
+          <div class="actions">
+            <button class="btn primary" type="button" id="nextBtn" aria-label="다음 문항">다음 →</button>
+          </div>
+        </div>
+        <div class="toast" id="toast" role="alert">응답을 선택해 주세요.</div>
+      </form>
+    </section>
+
+    <!-- Result -->
+    <section id="result" class="card" aria-labelledby="result-title" hidden>
+      <h2 id="result-title" style="margin-top:0">결과</h2>
+      <div style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom: 10px;">
+        <div class="type-badge" id="typeBadge"><span class="chip" aria-hidden="true"></span><span id="typeText">XXXX</span></div>
+        <span class="note" id="typeNote">선호 강도에 따라 유연하게 오갈 수 있어요.</span>
+      </div>
+
+      <div class="grid two" style="margin-top:8px">
+        <section aria-labelledby="meters-title">
+          <h3 id="meters-title" style="margin:.2rem 0 8px">선호 지표</h3>
+          <div class="meter-row" aria-label="외향 대 내향">
+            <span class="label">E</span>
+            <div class="meter" aria-hidden="true"><div class="bar" id="barEI" style="width:50%"></div></div>
+            <span class="label">I</span>
+          </div>
+          <div class="meter-row" aria-label="감각 대 직관" style="margin-top:8px">
+            <span class="label">S</span>
+            <div class="meter"><div class="bar" id="barSN" style="width:50%"></div></div>
+            <span class="label">N</span>
+          </div>
+          <div class="meter-row" aria-label="사고 대 감정" style="margin-top:8px">
+            <span class="label">T</span>
+            <div class="meter"><div class="bar" id="barTF" style="width:50%"></div></div>
+            <span class="label">F</span>
+          </div>
+          <div class="meter-row" aria-label="판단 대 인식" style="margin-top:8px">
+            <span class="label">J</span>
+            <div class="meter"><div class="bar" id="barJP" style="width:50%"></div></div>
+            <span class="label">P</span>
+          </div>
+          <p class="hint" style="margin-top:8px">막대는 해당 축에서 좌측 글자의 비율(%)을 나타냅니다.</p>
+        </section>
+
+        <section aria-labelledby="summary-title">
+          <h3 id="summary-title" style="margin:.2rem 0 8px">타입 요약</h3>
+          <div id="typeSummary" class="pill" style="min-height:64px"></div>
+          <details style="margin-top:10px">
+            <summary>활용 팁</summary>
+            <div id="tips"></div>
+          </details>
+          <details style="margin-top:10px">
+            <summary>주의 사항</summary>
+            <ul class="note" style="margin:.5rem 0 0 1rem">
+              <li>검사 결과는 <strong>선호 경향</strong>이며 능력의 높고 낮음이 아닙니다.</li>
+              <li>상황과 역할에 따라 반대 선호를 충분히 발휘할 수 있습니다.</li>
+              <li>채용·승진 등 중요한 결정의 단독 근거로 쓰지 마세요.</li>
+            </ul>
+          </details>
+        </section>
+      </div>
+
+      <div class="actions" style="margin-top:14px">
+        <button class="btn mint" id="shareBtn" aria-label="결과 복사">결과 복사</button>
+        <button class="btn rose" id="printBtn" aria-label="결과 인쇄">인쇄</button>
+        <button class="btn neutral" id="restartBtn" aria-label="다시하기">다시하기</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <span class="brandmark">Pastel MBTI</span> · made for self‑reflection · v1.0
+  </footer>
+
+  <script>
+    // ===== Data =====
+    const QUESTIONS = [
+      // E–I
+      { dim: 'EI', left: { code: 'E', text: '길게 이야기하며 아이디어가 정리된다' }, right: { code: 'I', text: '말하기 전 머릿속에서 먼저 정리된다' }, prompt: '어느 쪽이 더 자연스러워요?' },
+      { dim: 'EI', left: { code: 'E', text: '바쁜 하루 뒤 사람 만나면 충전된다' }, right: { code: 'I', text: '혼자 있어야 회복된다' }, prompt: '하루를 마친 뒤 당신은?' },
+      { dim: 'EI', left: { code: 'E', text: '새 모임에서 먼저 쉽게 말을 건다' }, right: { code: 'I', text: '익숙해질 때까지 관찰한다' }, prompt: '새로운 모임에서의 당신은?' },
+      // S–N
+      { dim: 'SN', left: { code: 'S', text: '설명은 사례·데이터가 편하다' }, right: { code: 'N', text: '설명은 개념·비유가 편하다' }, prompt: '어떤 설명이 귀에 쏙 들어오나요?' },
+      { dim: 'SN', left: { code: 'S', text: '지금 가능한 것에 더 끌린다' }, right: { code: 'N', text: '나중에 될 수 있는 것에 더 끌린다' }, prompt: '가능성 vs. 현실' },
+      { dim: 'SN', left: { code: 'S', text: '세부의 정확을 먼저 본다' }, right: { code: 'N', text: '큰 그림의 연결을 먼저 본다' }, prompt: '무엇을 먼저 보나요?' },
+      // T–F
+      { dim: 'TF', left: { code: 'T', text: '불편한 결정도 원칙대로 내린다' }, right: { code: 'F', text: '관계 영향을 고려해 조정한다' }, prompt: '어려운 결정을 할 때' },
+      { dim: 'TF', left: { code: 'T', text: '피드백은 직접적이고 구체적인 게 좋다' }, right: { code: 'F', text: '피드백은 배려와 맥락을 담는 게 좋다' }, prompt: '피드백 스타일' },
+      { dim: 'TF', left: { code: 'T', text: '공정성은 같은 규칙의 동일 적용' }, right: { code: 'F', text: '공정성은 상황별 형평 고려' }, prompt: '공정성에 대한 감각' },
+      // J–P
+      { dim: 'JP', left: { code: 'J', text: '계획이 있어야 안심된다' }, right: { code: 'P', text: '여지를 둬야 안심된다' }, prompt: '일정과 계획' },
+      { dim: 'JP', left: { code: 'J', text: '마감 훨씬 전에 완료하는 편' }, right: { code: 'P', text: '정보 더 모은 뒤 막판에 결정' }, prompt: '마감 습관' },
+      { dim: 'JP', left: { code: 'J', text: '변화는 계획에 반영한다' }, right: { code: 'P', text: '기회면 방향을 과감히 전환' }, prompt: '변화 대응' }
+    ];
+
+    const TYPE_SUMMARY = {
+      ISTJ: '신중한 실행가 · 책임감, 안정과 신뢰를 중시',
+      ISFJ: '배려형 수호자 · 헌신적이며 조화로운 환경을 선호',
+      INFJ: '통찰형 조언자 · 의미와 가치, 깊이 있는 연결 추구',
+      INTJ: '전략가 · 체계와 장기 플랜으로 성과를 설계',
+      ISTP: '문제해결 장인 · 실용적이고 유연한 방법을 선호',
+      ISFP: '온화한 예술가 · 조용한 헌신과 개인 가치를 중시',
+      INFP: '이상가 · 진정성과 가능성에 헌신',
+      INTP: '분석가 · 개념 탐구와 논리적 일관성을 추구',
+      ESTP: '현장형 추진가 · 즉응력과 현실 감각이 뛰어남',
+      ESFP: '분위기메이커 · 체험 중심, 즐거운 몰입을 선호',
+      ENFP: '아이디어 촉발자 · 가능성 탐색과 영감의 연결',
+      ENTP: '발명가 · 토론과 변화 추구, 창의적 전환',
+      ESTJ: '조직가 · 기준과 실행력으로 성과를 견인',
+      ESFJ: '조정가 · 협업과 돌봄, 따뜻한 공동체를 중시',
+      ENFJ: '코치 · 성장 지원과 관계 리더십',
+      ENTJ: '지휘관 · 목표 중심, 구조화와 추진력'
+    };
+
+    const TIPS_BY_LETTER = {
+      E: '에너지를 사람·활동에서 얻습니다. 긴 협업 뒤에는 짧은 혼자만의 정리 시간을 의식적으로 확보하세요.',
+      I: '깊은 집중과 혼자 숙고가 강점입니다. 중요한 회의 전 메모와 사전 정리를 요청하면 효율이 더 좋아집니다.',
+      S: '사실·사례에 강합니다. 요약 시 수치·절차 체크리스트를 붙이면 강점이 극대화됩니다.',
+      N: '패턴·가능성에 강합니다. 실행 단계에서는 “구체 예시/다음 액션 3개”를 붙여 밸런스를 잡으세요.',
+      T: '원칙·논리로 명확합니다. 피드백에 공감 표현 1문장을 덧붙이면 수용성이 올라갑니다.',
+      F: '사람 영향 감수성이 큽니다. 결정이 필요한 순간엔 기준표/우선순위를 먼저 적어보세요.',
+      J: '계획·마감 안정감이 큽니다. 변수 대비용 버퍼(20%)를 계획에 반영하세요.',
+      P: '유연·탐색이 강점입니다. 데드라인을 “결정 시점”과 분리해 미리 캘린더에 잡아두세요.'
+    }
+
+    // ===== State =====
+    let index = 0; // 0..11
+    const answers = new Array(QUESTIONS.length).fill(null); // 'L' | 'R'
+    const counts = { E:0, I:0, S:0, N:0, T:0, F:0, J:0, P:0 };
+
+    // ===== DOM =====
+    const intro = document.getElementById('intro');
+    const about = document.getElementById('about');
+    const quiz = document.getElementById('quiz');
+    const result = document.getElementById('result');
+    const startBtn = document.getElementById('startBtn');
+    const aboutBtn = document.getElementById('aboutBtn');
+    const startFromAbout = document.getElementById('startFromAbout');
+    const backToIntro = document.getElementById('backToIntro');
+
+    const qTitle = document.getElementById('qTitle');
+    const qDesc = document.getElementById('qDesc');
+    const leftText = document.getElementById('leftText');
+    const rightText = document.getElementById('rightText');
+    const optLeft = document.getElementById('optLeft');
+    const optRight = document.getElementById('optRight');
+
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const toast = document.getElementById('toast');
+    const progress = document.getElementById('progress');
+    const stepText = document.getElementById('stepText');
+
+    const typeBadge = document.getElementById('typeBadge');
+    const typeText = document.getElementById('typeText');
+    const typeNote = document.getElementById('typeNote');
+    const typeSummary = document.getElementById('typeSummary');
+    const tips = document.getElementById('tips');
+    const barEI = document.getElementById('barEI');
+    const barSN = document.getElementById('barSN');
+    const barTF = document.getElementById('barTF');
+    const barJP = document.getElementById('barJP');
+
+    const shareBtn = document.getElementById('shareBtn');
+    const printBtn = document.getElementById('printBtn');
+    const restartBtn = document.getElementById('restartBtn');
+
+    function showSection(which){
+      intro.hidden = which !== 'intro';
+      about.hidden = which !== 'about';
+      quiz.hidden = which !== 'quiz';
+      result.hidden = which !== 'result';
+      if(!quiz.hidden){
+        document.querySelector('#quiz .choice input[name="answer"]').focus({preventScroll:true});
+      }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderQuestion(){
+      const q = QUESTIONS[index];
+      qTitle.textContent = `Q${index+1}. ${q.prompt}`;
+      qDesc.textContent = `${q.dim.replace('EI','외향–내향').replace('SN','감각–직관').replace('TF','사고–감정').replace('JP','판단–인식')} 축`;
+      leftText.textContent = q.left.text + ` (${q.left.code})`;
+      rightText.textContent = q.right.text + ` (${q.right.code})`;
+
+      // Reset visuals
+      optLeft.classList.remove('selected');
+      optRight.classList.remove('selected');
+      const radios = document.querySelectorAll('input[name="answer"]');
+      radios.forEach(r => r.checked = false);
+
+      // Restore if answered
+      if(answers[index] === 'L'){
+        optLeft.classList.add('selected');
+        radios[0].checked = true;
+      } else if(answers[index] === 'R'){
+        optRight.classList.add('selected');
+        radios[1].checked = true;
+      }
+
+      progress.value = index + 1;
+      stepText.textContent = `${index+1} / ${QUESTIONS.length}`;
+      toast.classList.remove('show');
+
+      // Prev button state
+      prevBtn.disabled = index === 0;
+      nextBtn.textContent = (index === QUESTIONS.length - 1) ? '결과 보기 →' : '다음 →';
+    }
+
+    function commitAnswer(side){
+      answers[index] = side; // 'L' or 'R'
+      // Visual
+      optLeft.classList.toggle('selected', side === 'L');
+      optRight.classList.toggle('selected', side === 'R');
+      toast.classList.remove('show');
+    }
+
+    function validateAnswer(){
+      if(!answers[index]){ toast.classList.add('show'); return false; }
+      return true;
+    }
+
+    function compute(){
+      // Reset
+      for(const k of Object.keys(counts)) counts[k] = 0;
+
+      QUESTIONS.forEach((q, i) => {
+        const pick = answers[i];
+        if(!pick) return; // should be all answered
+        const pickedCode = pick === 'L' ? q.left.code : q.right.code;
+        counts[pickedCode]++;
+      });
+
+      const letterEI = (counts.E >= counts.I) ? 'E' : 'I';
+      const letterSN = (counts.S >= counts.N) ? 'S' : 'N';
+      const letterTF = (counts.T >= counts.F) ? 'T' : 'F';
+      const letterJP = (counts.J >= counts.P) ? 'J' : 'P';
+      const type = letterEI + letterSN + letterTF + letterJP;
+
+      // Percent bars (left letter share)
+      const eiPct = Math.round((counts.E / (counts.E + counts.I)) * 100) || 50;
+      const snPct = Math.round((counts.S / (counts.S + counts.N)) * 100) || 50;
+      const tfPct = Math.round((counts.T / (counts.T + counts.F)) * 100) || 50;
+      const jpPct = Math.round((counts.J / (counts.J + counts.P)) * 100) || 50;
+
+      return { type, eiPct, snPct, tfPct, jpPct };
+    }
+
+    function renderResult(){
+      const { type, eiPct, snPct, tfPct, jpPct } = compute();
+      typeText.textContent = type;
+      typeSummary.textContent = TYPE_SUMMARY[type] || '타입 요약이 준비되지 않았습니다.';
+
+      barEI.style.width = eiPct + '%';
+      barSN.style.width = snPct + '%';
+      barTF.style.width = tfPct + '%';
+      barJP.style.width = jpPct + '%';
+
+      // Tips by letters
+      const letters = type.split('');
+      tips.innerHTML = '<ul class="note" style="margin:.5rem 0 0 1rem">' +
+        letters.map(l => `<li><strong>${l}</strong> — ${TIPS_BY_LETTER[l]}</li>`).join('') +
+        '</ul>';
+
+      // Type note
+      const ties = [];
+      if(counts.E === counts.I) ties.push('E–I');
+      if(counts.S === counts.N) ties.push('S–N');
+      if(counts.T === counts.F) ties.push('T–F');
+      if(counts.J === counts.P) ties.push('J–P');
+      typeNote.textContent = ties.length ? `동률(${ties.join(', ')})이 있어 상황에 따라 유연하게 달라질 수 있어요.` : '선호 강도에 따라 유연하게 오갈 수 있어요.';
+
+      // Deep-link
+      const params = new URLSearchParams();
+      params.set('type', type);
+      history.replaceState(null, '', `${location.pathname}?${params.toString()}`);
+    }
+
+    function share(){
+      const { type } = compute();
+      const text = `내 MBTI 라이트 테스트 결과: ${type} — ${TYPE_SUMMARY[type] || ''}`.trim();
+      const url = location.href;
+      const payload = `${text}\n${url}`;
+      if(navigator.share){
+        navigator.share({ title: 'MBTI 라이트 테스트', text, url }).catch(()=>{});
+      } else {
+        navigator.clipboard.writeText(payload).then(()=>{
+          shareBtn.textContent = '복사 완료!';
+          setTimeout(()=> shareBtn.textContent = '결과 복사', 1600);
+        });
+      }
+    }
+
+    function restart(){
+      index = 0;
+      answers.fill(null);
+      showSection('quiz');
+      renderQuestion();
+      history.replaceState(null, '', location.pathname);
+    }
+
+    // ===== Events =====
+    startBtn.addEventListener('click', ()=>{ showSection('quiz'); renderQuestion(); });
+    aboutBtn.addEventListener('click', ()=>{ showSection('about'); });
+    startFromAbout?.addEventListener('click', ()=>{ showSection('quiz'); renderQuestion(); });
+    backToIntro?.addEventListener('click', ()=>{ showSection('intro'); });
+
+    optLeft.addEventListener('click', ()=> commitAnswer('L'));
+    optRight.addEventListener('click', ()=> commitAnswer('R'));
+
+    clearBtn.addEventListener('click', ()=>{ answers[index] = null; renderQuestion(); });
+
+    prevBtn.addEventListener('click', ()=>{ if(index>0){ index--; renderQuestion(); }});
+
+    nextBtn.addEventListener('click', ()=>{
+      if(!validateAnswer()) return;
+      if(index < QUESTIONS.length - 1){
+        index++; renderQuestion();
+      } else {
+        renderResult(); showSection('result');
+      }
+    });
+
+    shareBtn.addEventListener('click', share);
+    printBtn.addEventListener('click', ()=> window.print());
+    restartBtn.addEventListener('click', restart);
+
+    // Keyboard support for labels
+    document.querySelectorAll('.choice input[name="answer"]').forEach((r, idx)=>{
+      r.addEventListener('change', ()=> commitAnswer(idx===0 ? 'L' : 'R'));
+    });
+
+    // If URL carries ?type=XXXX, show summary sheet
+    function bootFromQuery(){
+      const params = new URLSearchParams(location.search);
+      const t = params.get('type');
+      if(!t) return; // normal flow
+      // Render an empty 50% meter summary for shared link
+      showSection('result');
+      typeText.textContent = t.toUpperCase();
+      typeSummary.textContent = TYPE_SUMMARY[t.toUpperCase()] || '타입 요약이 준비되지 않았습니다.';
+      [barEI,barSN,barTF,barJP].forEach(b => b.style.width = '50%');
+      tips.innerHTML = '<ul class="note" style="margin:.5rem 0 0 1rem">' +
+        t.toUpperCase().split('').map(l => `<li><strong>${l}</strong> — ${TIPS_BY_LETTER[l]}</li>`).join('') +
+        '</ul>';
+      typeNote.textContent = '공유 전용 요약 화면입니다. 전체 문항을 풀면 개인 비율이 표시됩니다.';
+    }
+
+    bootFromQuery();
+  </script>
+</body>
+</html>
